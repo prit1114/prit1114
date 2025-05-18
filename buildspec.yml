@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14  # Change based on your app requirements
+    commands:
+      - echo "Installing dependencies..."
+      - npm install  # Or your package manager commands
+
+  build:
+    commands:
+      - echo "Building the application..."
+      - npm run build  # Or your build command
+
+  post_build:
+    commands:
+      - echo "Zipping artifacts..."
+      - zip -r application.zip *  # Creates a zip of your built app
+
+artifacts:
+  files:
+    - '**/*'
+  name: my-app-$(date +%Y-%m-%d)
