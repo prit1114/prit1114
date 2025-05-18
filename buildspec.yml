@@ -1,24 +1,31 @@
+
 version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 14  # Change based on your app requirements
     commands:
-      - echo "Installing dependencies..."
-      - npm install  # Or your package manager commands
+      - echo "Installing SSH client..."
+      - yum install -y openssh-clients  # Required for scp/ssh
+      - yum install -y zip unzip  # Ensure zip tools exist
 
   build:
     commands:
-      - echo "Building the application..."
-      - npm run build  # Or your build command
+      - echo "Building application..."
+      - npm install
+      - npm run build
 
   post_build:
     commands:
-      - echo "Zipping artifacts..."
-      - zip -r application.zip *  # Creates a zip of your built app
+      - echo "Preparing deployment package..."
+      - zip -r application.zip * -x "deploy-key.pem"  # Exclude key from zip
+      
+      - echo "Securely copying files to EC2..."
+      - chmod 400 deploy-key.pem  # Critical permission for SSH key
+      - scp -i deploy-key.pem -o StrictHostKeyChecking=no application.zip ec2-user@YOUR_EC2_IP:/home/ec2-user/
+      
+      - echo "Executing deployment script..."
+      - ssh -i deploy-key.pem -o StrictHostKeyChecking=no ec2-user@YOUR_EC2_IP "chmod +x /home/ec2-user/deploy.sh && /home/ec2-user/deploy.sh"
 
 artifacts:
   files:
     - '**/*'
-  name: my-app-$(date +%Y-%m-%d)
